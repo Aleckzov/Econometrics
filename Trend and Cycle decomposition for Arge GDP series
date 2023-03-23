@@ -1,0 +1,218 @@
+library("tseries")
+library("mFilter")
+library("xlsx")
+library("forecast")
+library("dynlm")
+library("seasonal")
+
+#_________________________________________ARGENTINA___________________________________________________________________________________________
+arggdp <- ts(log(ARGENTINA$`Gross Domestic Product, MILL 2010USD`) ,start = c(1995,1),frequency = 4)
+argpc <- ts(log(ARGENTINA$`Household Consumption Expenditure, incl. NPISHs, MILL 2010USD`) ,start = c(1995,1),frequency = 4)
+arggto <- ts(log(ARGENTINA$`Government Consumption Expenditure, MILL 2010USD`),start = c(1995,1),frequency = 4)
+argkfor <- ts(log(ARGENTINA$`Gross Fixed Capital Formation, MILL2010USD`),start = c(1995,1),frequency = 4)
+argexp <- ts(log(ARGENTINA$`Exports of Goods and Services, MILL 2010USD`),start = c(1995,1),frequency = 4)
+argimp <- ts(log(ARGENTINA$`Imports of Goods and Services, MILL 2010USD`),start = c(1995,1),frequency = 4)
+
+arggdp
+
+seasarggdp <- seas(arggdp,x11="",regression.aictest = NULL)$series$d10
+trarggdp <- hpfilter(arggdp-seasarggdp,type = "lambda",freq = 1600)$trend
+cycarggdp <- arggdp-trarggdp-seasarggdp
+adf.test(arggdp-seasarggdp)
+summary(lm(diff(arggdp-seasarggdp)~lag(diff(arggdp-seasarggdp),k=1)))
+adf.test(cycarggdp)
+
+seasargpc <- seas(argpc,x11="",regression.aictest = NULL)$series$d10
+trargpc <- hpfilter(argpc-seasargpc,type = "lambda",freq = 1600)$trend
+cycargpc <- argpc-trargpc-seasargpc
+adf.test(cycargpc)
+
+seasarggto <- seas(arggto,x11="",regression.aictest = NULL)$series$d10
+trarggto <- hpfilter(arggto-seasarggto,type = "lambda",freq = 1600)$trend
+cycarggto <- arggto-trarggto-seasarggto
+adf.test(cycarggto)
+
+seasargkfor <- seas(argkfor,x11="",regression.aictest = NULL)$series$d10
+trargkfor <- hpfilter(argkfor-seasargkfor,type = "lambda",freq = 1600)$trend
+cycargkfor <- argkfor-trargkfor-seasargkfor
+adf.test(cycargkfor)
+
+seasargexp <- seas(argexp,x11="",regression.aictest = NULL)$series$d10
+trargexp <- hpfilter(argexp-seasargexp,type = "lambda",freq = 1600)$trend
+cycargexp <- argexp-trargexp-seasargexp
+adf.test(cycargexp)
+
+seasargimp <- seas(argimp,x11="",regression.aictest = NULL)$series$d10
+trargimp <- hpfilter(argimp-seasargimp,type = "lambda",freq = 1600)$trend
+cycargimp <- argimp-trargimp-seasargimp
+adf.test(cycargimp)
+
+write.xlsx(cbind(cycarggdp,cycargpc,cycarggto,cycargkfor,cycargexp,cycargimp),file = "C:/Users/aleck/Documents/Investigaciones/Prof Jacobo/arg/cycarg.xlsx")
+write.xlsx(cbind(trarggdp,trargpc,trarggto,trargkfor,trargexp,trargimp),file = "C:/Users/aleck/Documents/Investigaciones/Prof Jacobo/arg/trarg.xlsx")
+write.xlsx(cbind(trarggdp,cycarggdp+trarggdp,trargpc,cycargpc+trargpc,trarggto,cycarggto+trarggto,trargkfor,cycargkfor+trargkfor,trargexp,cycargexp+trargexp,trargimp,cycargimp+trargimp),file = "C:/Users/aleck/Documents/Investigaciones/Prof Jacobo/arg/arg.xlsx")
+
+
+#GDP_______________________________________________________________________________________________________________
+write.xlsx(cbind(cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycarggdp ,k=-3),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycarggdp ,k=-2),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycarggdp ,k=-1),end=c(2018,4)),method = "spearman")[4]
+)),
+
+cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycarggdp ,k=-3),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycarggdp ,k=-2),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycarggdp ,k=-1),end=c(2018,4)),method = "spearman")[3]
+))),file="C:/Users/aleck/Documents/Investigaciones/Prof Jacobo/arg/cortestarggdp.xlsx")
+
+#CONSUMO PRIVADO___________________________________________________________________________________________________
+write.xlsx(cbind(cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycargpc ,k=-3),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycargpc ,k=-2),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycargpc ,k=-1),end=c(2018,4)),method = "spearman")[4],
+  
+  cor.test(cycarggdp ,cycargpc ,method = "spearman")[4],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycargpc ,k=1),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycargpc ,k=2),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycargpc ,k=3),start=c(1995,1)),method = "spearman")[4]
+)),
+
+cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycargpc ,k=-3),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycargpc ,k=-2),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycargpc ,k=-1),end=c(2018,4)),method = "spearman")[3],
+  
+  cor.test(cycarggdp ,cycargpc ,method = "spearman")[3],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycargpc ,k=1),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycargpc ,k=2),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycargpc ,k=3),start=c(1995,1)),method = "spearman")[3]
+))),file="C:/Users/aleck/Documents/Investigaciones/Prof Jacobo/arg/cortestargpc.xlsx")
+
+
+#CONSUMO PÚBLICO___________________________________________________________________________________________________
+write.xlsx(cbind(cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycarggto ,k=-3),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycarggto ,k=-2),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycarggto ,k=-1),end=c(2018,4)),method = "spearman")[4],
+  
+  cor.test(cycarggdp ,cycarggto ,method = "spearman")[4],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycarggto ,k=1),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycarggto ,k=2),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycarggto ,k=3),start=c(1995,1)),method = "spearman")[4]
+)),
+
+cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycarggto ,k=-3),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycarggto ,k=-2),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycarggto ,k=-1),end=c(2018,4)),method = "spearman")[3],
+  
+  cor.test(cycarggdp ,cycarggto ,method = "spearman")[3],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycarggto ,k=1),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycarggto ,k=2),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycarggto ,k=3),start=c(1995,1)),method = "spearman")[3]
+))),file="C:/Users/aleck/Documents/Investigaciones/Prof Jacobo/arg/cortestarggto.xlsx")
+
+#FORMACIÓN BRUTA DE CAPITAL FIJO____________________________________________________________________________________
+write.xlsx(cbind(cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycargkfor ,k=-3),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycargkfor ,k=-2),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycargkfor ,k=-1),end=c(2018,4)),method = "spearman")[4],
+  
+  cor.test(cycarggdp ,cycargkfor ,method = "spearman")[4],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycargkfor ,k=1),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycargkfor ,k=2),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycargkfor ,k=3),start=c(1995,1)),method = "spearman")[4]
+)),
+
+cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycargkfor ,k=-3),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycargkfor ,k=-2),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycargkfor ,k=-1),end=c(2018,4)),method = "spearman")[3],
+  
+  cor.test(cycarggdp ,cycargkfor ,method = "spearman")[3],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycargkfor ,k=1),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycargkfor ,k=2),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycargkfor ,k=3),start=c(1995,1)),method = "spearman")[3]
+))),file="C:/Users/aleck/Documents/Investigaciones/Prof Jacobo/arg/cortestargkfor.xlsx")
+
+#EXPORTACIONES DE BIENES Y SERVICIOS________________________________________________________________________________
+write.xlsx(cbind(cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycargexp ,k=-3),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycargexp ,k=-2),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycargexp ,k=-1),end=c(2018,4)),method = "spearman")[4],
+  
+  cor.test(cycarggdp ,cycargexp ,method = "spearman")[4],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycargexp ,k=1),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycargexp ,k=2),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycargexp ,k=3),start=c(1995,1)),method = "spearman")[4]
+)),
+
+cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycargexp ,k=-3),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycargexp ,k=-2),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycargexp ,k=-1),end=c(2018,4)),method = "spearman")[3],
+  
+  cor.test(cycarggdp ,cycargexp ,method = "spearman")[3],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycargexp ,k=1),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycargexp ,k=2),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycargexp ,k=3),start=c(1995,1)),method = "spearman")[3]
+))),file="C:/Users/aleck/Documents/Investigaciones/Prof Jacobo/arg/cortestargexp.xlsx")
+
+#IMPORTACIONES DE BIENES Y SERVICIOS________________________________________________________________________________
+write.xlsx(cbind(cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycargimp ,k=-3),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycargimp ,k=-2),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycargimp ,k=-1),end=c(2018,4)),method = "spearman")[4],
+  
+  cor.test(cycarggdp ,cycargimp ,method = "spearman")[4],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycargimp ,k=1),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycargimp ,k=2),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycargimp ,k=3),start=c(1995,1)),method = "spearman")[4]
+)),
+
+cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycargimp ,k=-3),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycargimp ,k=-2),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycargimp ,k=-1),end=c(2018,4)),method = "spearman")[3],
+  
+  cor.test(cycarggdp ,cycargimp ,method = "spearman")[3],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycargimp ,k=1),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycargimp ,k=2),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycargimp ,k=3),start=c(1995,1)),method = "spearman")[3]
+))),file="C:/Users/aleck/Documents/Investigaciones/Prof Jacobo/arg/cortestargimp.xlsx")
+
+#EXPORTACIONES NETAS DE BIENES Y SERVICIOS________________________________________________________________________________
+write.xlsx(cbind(cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycargexp-cycargimp ,k=-3),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycargexp-cycargimp ,k=-2),end=c(2018,4)),method = "spearman")[4],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycargexp-cycargimp ,k=-1),end=c(2018,4)),method = "spearman")[4],
+  
+  cor.test(cycarggdp ,cycargexp-cycargimp ,method = "spearman")[4],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycargexp-cycargimp ,k=1),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycargexp-cycargimp ,k=2),start=c(1995,1)),method = "spearman")[4],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycargexp-cycargimp ,k=3),start=c(1995,1)),method = "spearman")[4]
+)),
+
+cbind(c(
+  cor.test(window(cycarggdp , start = c(1995,4)),window(lag(cycargexp-cycargimp ,k=-3),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,3)),window(lag(cycargexp-cycargimp ,k=-2),end=c(2018,4)),method = "spearman")[3],
+  cor.test(window(cycarggdp , start = c(1995,2)),window(lag(cycargexp-cycargimp ,k=-1),end=c(2018,4)),method = "spearman")[3],
+  
+  cor.test(cycarggdp ,cycargexp-cycargimp ,method = "spearman")[3],
+  
+  cor.test(window(cycarggdp , end=c(2018,3)),window(lag(cycargexp-cycargimp ,k=1),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,2)),window(lag(cycargexp-cycargimp ,k=2),start=c(1995,1)),method = "spearman")[3],
+  cor.test(window(cycarggdp , end=c(2018,1)),window(lag(cycargexp-cycargimp ,k=3),start=c(1995,1)),method = "spearman")[3]
+))),file="C:/Users/aleck/Documents/Investigaciones/Prof Jacobo/arg/cortestargxnt.xlsx")
+plot(arggdp)
